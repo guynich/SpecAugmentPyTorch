@@ -213,12 +213,28 @@ if __name__ == "__main__":
   print(wav1.dtype)
   print(wav1.shape, wav2.shape)
   wav = torch.from_numpy(np.stack([wav1, wav2]))
-  spec = torch.stft(wav, 512, 160, 512, torch.hann_window(512)).permute(0, 3, 1, 2) # [N, 2, F, T]
+
+  # From version 1.8.0, return_complex must always be given explicitly for
+  # real inputs and return_complex=False has been deprecated. Strongly prefer
+  # return_complex=True as in a future pytorch release, this function will
+  # only return complex tensors.
+  spec = torch.stft(wav, 512, 160, 512, torch.hann_window(512),
+                    return_complex=True)
+  spec = torch.view_as_real(spec).permute(0, 3, 1, 2)  # [N, 2, F, T].
   print(spec.shape) # [N, 2, F, T]
+  if len(spec.shape) != 4:
+    raise ValueError("Spectrogram is not 4-D, wanted shape is [N, 2, F, T].")
 
   spec_aug = aug_fn(spec)
 
-  wav_aug = torch.istft(spec_aug.permute(0, 2, 3, 1), 512, 160, 512, torch.hann_window(512), length=wav.shape[-1])
+  # Changed in version 2.0: Real datatype inputs are no longer supported.
+  # Input must now have a complex datatype.
+  # https://pytorch.org/docs/stable/generated/torch.istft.html#torch-istft
+  spec_aug_complex = torch.view_as_complex(
+    spec_aug.permute(0, 2, 3, 1).contiguous())  # [N, F, T]
+  wav_aug = torch.istft(
+    spec_aug_complex, 512, 160, 512, torch.hann_window(512),
+    length=wav.shape[-1])
   sf.write("./examples/1089-0001-SpecAug.flac", wav_aug[0], sr)
   sf.write("./examples/1089-0002-SpecAug.flac", wav_aug[1], sr)
 
@@ -229,5 +245,3 @@ if __name__ == "__main__":
   visualization_spectrogram(mag_aug[0],"1089-0001-SpecAug")
   visualization_spectrogram(mag[1],"1089-0002")
   visualization_spectrogram(mag_aug[1],"1089-0002-SpecAug")
-
-

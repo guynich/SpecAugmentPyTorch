@@ -3,7 +3,7 @@ An implementation of SpecAugment for Pytorch
 
 ## How to use
 
-Install pytorch (version==1.6.0 is used for testing).
+Install librosa, matplotlib and pyorch (version==2.4.0 used for testing).
 
 
 ```python
@@ -14,7 +14,10 @@ p = {'W':40, 'F':29, 'mF':2, 'T':50, 'p':1.0, 'mT':2, 'batch':False}
 specaug_fn = SpecAugmentTorch(**p)
 
 # [batch, c, frequency, n_frame], c=1 for magnitude or mel-spec, c=2 for complex stft
-complex_stft = torch.randn(1, 1, 257, 150) 
+complex_stft = torch.randn(1, 1, 257, 150)
+complex_stft = complex_stft - torch.min(complex_stft)
+complex_stft = complex_stft / torch.max(complex_stft)
+
 complex_stft_aug = specaug_fn(complex_stft) # [b, c, f, t]
 visualization_spectrogram(complex_stft_aug[0][0], "blabla")
 ```
