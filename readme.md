@@ -3,7 +3,7 @@ An implementation of SpecAugment for Pytorch
 
 ## How to use
 
-Install librosa, matplotlib and pyorch (version==2.4.0 used for testing).
+Install librosa, matplotlib and pytorch (version==2.4.0 used for testing).
 
 
 ```python
